@@ -16,11 +16,14 @@ public class PersonRepository implements Repository {
     private static PersonRepository instance;
 
     private PersonRepository() {
+        createTable();
     }
 
     public static synchronized PersonRepository getInstance() {
-
-        return null;
+        if (instance == null){
+            instance =  new PersonRepository();
+        }
+        return instance;
     }
 
     private void createTable() {
