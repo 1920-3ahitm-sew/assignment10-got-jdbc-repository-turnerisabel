@@ -45,7 +45,13 @@ public class PersonRepository implements Repository {
     }
 
     public void deleteAll() {
-
+        try(Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD)){
+            try(Statement statement = connection.createStatement()){
+                statement.executeUpdate("DELETE FROM PERSON");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -108,6 +114,7 @@ public class PersonRepository implements Repository {
                 preparedStatement.setString(3, personToSave.getHouse());
                 preparedStatement.setLong(4, personToSave.getId());
                 preparedStatement.executeUpdate();
+                return 1;
             }
         } catch (SQLException e) {
             System.err.println();
@@ -117,7 +124,13 @@ public class PersonRepository implements Repository {
 
     @Override
     public void delete(long id) {
-
+        try(Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD)){
+            try(Statement statement = connection.createStatement()){
+                statement.executeUpdate("DELETE FROM PERSON WHERE ID = " + id);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
