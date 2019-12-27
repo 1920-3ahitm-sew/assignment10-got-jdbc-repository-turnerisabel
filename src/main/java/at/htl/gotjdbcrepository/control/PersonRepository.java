@@ -141,7 +141,20 @@ public class PersonRepository implements Repository {
      * @return die gefundene Person oder wenn nicht gefunden wird null zurückgegeben
      */
     public Person find(long id) {
-
+        try(Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD)){
+            try(Statement statement = connection.createStatement()){
+                ResultSet resultSet = statement.executeQuery("SELECT * FROM PERSON WHERE ID = " + id);
+                Person selectedPerson = new Person();
+                selectedPerson.setId(id);
+                resultSet.next();
+                selectedPerson.setName(resultSet.getString("name"));
+                selectedPerson.setCity(resultSet.getString("city"));
+                selectedPerson.setHouse(resultSet.getString("house"));
+                return selectedPerson;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 

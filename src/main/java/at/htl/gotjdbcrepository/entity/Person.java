@@ -9,6 +9,15 @@ public class Person {
     private String city;
     private String house;
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Person){
+            Person person = (Person) obj;
+            return name.equals(person.name) && city.equals(person.city) && house.equals(person.house);
+        }
+        return false;
+    }
+
     public Person() {
     }
 
