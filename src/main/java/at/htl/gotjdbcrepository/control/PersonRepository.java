@@ -64,7 +64,11 @@ public class PersonRepository implements Repository {
      */
     @Override
     public Person save(Person newPerson) {
-
+        if (newPerson.getId() != null){
+            update(newPerson);
+        }else {
+            insert(newPerson);
+        }
         return null;
     }
 
@@ -76,7 +80,16 @@ public class PersonRepository implements Repository {
      * @return Rückgabe der Person inklusive der neu generierten ID
      */
     private Person insert(Person personToSave) {
-
+        try(Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD)){
+            try(PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO PERSON (name, city, house) VALUES (?, ?, ?)")){
+                preparedStatement.setString(1, personToSave.getName());
+                preparedStatement.setString(2, personToSave.getCity());
+                preparedStatement.setString(3, personToSave.getHouse());
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            System.err.println();
+        }
         return null;
     }
 
@@ -87,7 +100,18 @@ public class PersonRepository implements Repository {
      *         wenn nicht erfolgreich --> -1
      */
     private int update(Person personToSave) {
-
+        try(Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD)){
+            try(PreparedStatement preparedStatement = connection.prepareStatement("UPDATE PERSON" +
+                    "SET NAME = ?, city = ?, house = ? WHERE id = ?")){
+                preparedStatement.setString(1, personToSave.getName());
+                preparedStatement.setString(2, personToSave.getCity());
+                preparedStatement.setString(3, personToSave.getHouse());
+                preparedStatement.setLong(4, personToSave.getId());
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            System.err.println();
+        }
         return -1;
     }
 
