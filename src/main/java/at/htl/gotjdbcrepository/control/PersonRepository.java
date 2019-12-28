@@ -3,6 +3,7 @@ package at.htl.gotjdbcrepository.control;
 import at.htl.gotjdbcrepository.entity.Person;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -164,9 +165,22 @@ public class PersonRepository implements Repository {
      * @return Liste aller Personen des gegebenen Hauses
      */
     public List<Person> findByHouse(String house) {
-
+        List<Person> personList = new ArrayList<>();
+        try (Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
+            try (Statement statement = connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery("SELECT * FROM PERSON WHERE HOUSE = " + house);
+                Person selectedPerson = new Person();
+                selectedPerson.setHouse(house);
+                resultSet.next();
+                selectedPerson.setId(resultSet.getLong("id" ));
+                selectedPerson.setName(resultSet.getString("name" ));
+                selectedPerson.setCity(resultSet.getString("city" ));
+                personList.add(selectedPerson);
+                return personList;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return null;
     }
-
-
 }
