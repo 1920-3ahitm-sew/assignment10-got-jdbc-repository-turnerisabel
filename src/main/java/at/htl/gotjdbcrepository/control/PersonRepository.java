@@ -70,12 +70,13 @@ public class PersonRepository implements Repository {
     @Override
     public Person save(Person newPerson) {
         if (newPerson.getId() != null) {
-            update(newPerson);
-            return newPerson;
-        } else {
-            insert(newPerson);
-            return newPerson;
+            Person person = find(newPerson.getId());
+            if (person != null){
+                update(newPerson);
+            }
         }
+        insert(newPerson);
+        return newPerson;
     }
 
     /**
