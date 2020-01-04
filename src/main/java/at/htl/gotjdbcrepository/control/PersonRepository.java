@@ -4,7 +4,6 @@ import at.htl.gotjdbcrepository.entity.Person;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class PersonRepository implements Repository {
@@ -21,8 +20,8 @@ public class PersonRepository implements Repository {
     }
 
     public static synchronized PersonRepository getInstance() {
-        if (instance == null){
-            instance =  new PersonRepository();
+        if (instance == null) {
+            instance = new PersonRepository();
         }
         return instance;
     }
@@ -46,9 +45,9 @@ public class PersonRepository implements Repository {
     }
 
     public void deleteAll() {
-        try(Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD)){
-            try(Statement statement = connection.createStatement()){
-                statement.executeUpdate("DELETE FROM PERSON");
+        try (Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
+            try (Statement statement = connection.createStatement()) {
+                statement.executeUpdate("DELETE FROM PERSON" );
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -56,14 +55,13 @@ public class PersonRepository implements Repository {
     }
 
     /**
-     *
      * Hat newPerson eine ID (id != null) so in der Tabelle die entsprechende Person gesucht und upgedated
      * Hat newPerson keine ID wird ein neuer Datensatz eingefügt.
-     *
+     * <p>
      * Wie man die generierte ID zurück erhält: https://stackoverflow.com/a/1915197
-     *
+     * <p>
      * Falls ein Fehler auftritt, wird nur die Fehlermeldung ausgegeben, der Programmlauf nicht abgebrochen
-     *
+     * <p>
      * Verwenden sie hier die privaten MEthoden update() und insert()
      *
      * @param newPerson
@@ -71,45 +69,51 @@ public class PersonRepository implements Repository {
      */
     @Override
     public Person save(Person newPerson) {
-        if (newPerson.getId() != null){
+        if (newPerson.getId() != null) {
             update(newPerson);
-        }else {
+            return newPerson;
+        } else {
             insert(newPerson);
+            return newPerson;
         }
-        return null;
     }
 
     /**
-     *
      * Wie man die generierte ID erhält: https://stackoverflow.com/a/1915197
      *
      * @param personToSave
      * @return Rückgabe der Person inklusive der neu generierten ID
      */
     private Person insert(Person personToSave) {
-        try(Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD)){
-            try(PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO PERSON (name, city, house) VALUES (?, ?, ?)")){
+        try (Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO PERSON (name, city, house) VALUES (?, ?, ?)", Statement.RETURN_GENERATED_KEYS )) {
                 preparedStatement.setString(1, personToSave.getName());
                 preparedStatement.setString(2, personToSave.getCity());
                 preparedStatement.setString(3, personToSave.getHouse());
                 preparedStatement.executeUpdate();
+
+                try(ResultSet resultSet = preparedStatement.getGeneratedKeys()) {
+                    if (resultSet.next()) {
+                        long id = resultSet.getLong(1);
+                        personToSave.setId(id);
+                    }
+                }
             }
         } catch (SQLException e) {
             System.err.println();
         }
-        return null;
+        return personToSave;
     }
 
     /**
-     *
      * @param personToSave
      * @return wenn erfolgreich --> Anzahl der eingefügten Zeilen, also 1
-     *         wenn nicht erfolgreich --> -1
+     * wenn nicht erfolgreich --> -1
      */
     private int update(Person personToSave) {
-        try(Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD)){
-            try(PreparedStatement preparedStatement = connection.prepareStatement("UPDATE PERSON" +
-                    "SET NAME = ?, city = ?, house = ? WHERE id = ?")){
+        try (Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement("UPDATE PERSON" +
+                    "SET NAME = ?, city = ?, house = ? WHERE id = ?" )) {
                 preparedStatement.setString(1, personToSave.getName());
                 preparedStatement.setString(2, personToSave.getCity());
                 preparedStatement.setString(3, personToSave.getHouse());
@@ -125,8 +129,8 @@ public class PersonRepository implements Repository {
 
     @Override
     public void delete(long id) {
-        try(Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD)){
-            try(Statement statement = connection.createStatement()){
+        try (Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
+            try (Statement statement = connection.createStatement()) {
                 statement.executeUpdate("DELETE FROM PERSON WHERE ID = " + id);
             }
         } catch (SQLException e) {
@@ -135,23 +139,23 @@ public class PersonRepository implements Repository {
     }
 
     /**
-     *
      * Finden Sie eine Person anhand Ihrer ID
      *
      * @param id
      * @return die gefundene Person oder wenn nicht gefunden wird null zurückgegeben
      */
     public Person find(long id) {
-        try(Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD)){
-            try(Statement statement = connection.createStatement()){
-                ResultSet resultSet = statement.executeQuery("SELECT * FROM PERSON WHERE ID = " + id);
-                Person selectedPerson = new Person();
-                selectedPerson.setId(id);
-                resultSet.next();
-                selectedPerson.setName(resultSet.getString("name"));
-                selectedPerson.setCity(resultSet.getString("city"));
-                selectedPerson.setHouse(resultSet.getString("house"));
-                return selectedPerson;
+        try (Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
+            try (Statement statement = connection.createStatement()) {
+                try(ResultSet resultSet = statement.executeQuery("SELECT * FROM PERSON WHERE ID = " + id)) {
+                    Person selectedPerson = new Person();
+                    selectedPerson.setId(id);
+                    resultSet.next();
+                    selectedPerson.setName(resultSet.getString("name" ));
+                    selectedPerson.setCity(resultSet.getString("city" ));
+                    selectedPerson.setHouse(resultSet.getString("house" ));
+                    return selectedPerson;
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -160,24 +164,40 @@ public class PersonRepository implements Repository {
     }
 
     /**
-     *
      * @param house Name des Hauses
      * @return Liste aller Personen des gegebenen Hauses
      */
     public List<Person> findByHouse(String house) {
         List<Person> personList = new ArrayList<>();
         try (Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
-            try (Statement statement = connection.createStatement()) {
-                ResultSet resultSet = statement.executeQuery("SELECT * FROM PERSON WHERE HOUSE = " + house);
-                Person selectedPerson = new Person();
-                selectedPerson.setHouse(house);
-                resultSet.next();
-                selectedPerson.setId(resultSet.getLong("id" ));
-                selectedPerson.setName(resultSet.getString("name" ));
-                selectedPerson.setCity(resultSet.getString("city" ));
-                personList.add(selectedPerson);
+            try(PreparedStatement preparedStatement = connection.prepareStatement("SELECT id, name, city, house FROM PERSON WHERE HOUSE =  ?")){
+                preparedStatement.setString(1, house);
+                try(ResultSet resultSet = preparedStatement.executeQuery()) {
+                    while (resultSet.next() == true) {
+                        Person selectedPerson = new Person();
+                        selectedPerson.setHouse(house);
+                        selectedPerson.setId(resultSet.getLong("id" ));
+                        selectedPerson.setName(resultSet.getString("name" ));
+                        selectedPerson.setCity(resultSet.getString("city" ));
+                        personList.add(selectedPerson);
+                    }
+                }
                 return personList;
             }
+
+            /*try (Statement statement = connection.createStatement()) {
+                ResultSet resultSet = statement.executeQuery("SELECT * FROM PERSON WHERE HOUSE = '" + house + "'");
+                while(resultSet.next() == true){
+                    Person selectedPerson = new Person();
+                    selectedPerson.setHouse(house);
+                    resultSet.next();
+                    selectedPerson.setId(resultSet.getLong("id" ));
+                    selectedPerson.setName(resultSet.getString("name" ));
+                    selectedPerson.setCity(resultSet.getString("city" ));
+                    personList.add(selectedPerson);
+                }
+                return personList;
+            }*/
         } catch (SQLException e) {
             e.printStackTrace();
         }

@@ -342,7 +342,7 @@ class PersonRepositoryTest {
          * act ... Durchführen des Tests
          */
         List<Person> actualPersons = personRepository.findByHouse("Stane of Driftwood Hall");
-        actualPersons.stream().forEach(System.out::println);
+        actualPersons.forEach(System.out::println);
 
         /**
          * assert ... Ergebnisse kontrollieren
